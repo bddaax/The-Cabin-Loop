@@ -1,0 +1,194 @@
+[gd_scene load_steps=20 format=3 uid="uid://whispering_yard"]
+
+[ext_resource type="Script" path="res://scripts/levels/Yard.gd" id="1_yard"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_horror"]
+sky_top_color = Color(0.01, 0.01, 0.01, 1)
+sky_horizon_color = Color(0.05, 0.06, 0.08, 1)
+ground_bottom_color = Color(0.01, 0.01, 0.01, 1)
+ground_horizon_color = Color(0.05, 0.06, 0.08, 1)
+sun_angle_max = 30.0
+
+[sub_resource type="Sky" id="Sky_horror"]
+sky_material = SubResource("ProceduralSkyMaterial_horror")
+
+[sub_resource type="Environment" id="Env_Yard"]
+background_mode = 2
+sky = SubResource("Sky_horror")
+ambient_light_source = 3
+ambient_light_color = Color(0.22, 0.26, 0.32, 1)
+ambient_light_sky_contribution = 0.75
+ambient_light_energy = 0.75
+tonemap_mode = 2
+fog_enabled = true
+fog_density = 0.04
+fog_light_color = Color(0.02, 0.02, 0.02, 1)
+volumetric_fog_enabled = false
+
+[sub_resource type="StandardMaterial3D" id="Mat_GrassFloor"]
+albedo_color = Color(0.05, 0.06, 0.03, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_Path"]
+albedo_color = Color(0.2, 0.2, 0.25, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_HouseExterior"]
+albedo_color = Color(0.05, 0.05, 0.05, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_HouseRoof"]
+albedo_color = Color(0.02, 0.02, 0.02, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_DoorExt"]
+albedo_color = Color(0.1, 0.05, 0.02, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_PorchLight"]
+albedo_color = Color(1, 0.9, 0.7, 1)
+emission_enabled = true
+emission = Color(0.6, 0.4, 0.2, 1)
+emission_energy_multiplier = 1.0
+
+[sub_resource type="BoxMesh" id="Mesh_Floor"]
+size = Vector3(80.0, 0.5, 80.0)
+
+[sub_resource type="BoxShape3D" id="Shape_Floor"]
+size = Vector3(80.0, 0.5, 80.0)
+
+[sub_resource type="BoxMesh" id="Mesh_Path"]
+size = Vector3(2.4, 0.1, 50.0)
+
+[sub_resource type="BoxMesh" id="Mesh_Wall"]
+size = Vector3(50.0, 6.0, 1.0)
+
+[sub_resource type="BoxShape3D" id="Shape_Wall"]
+size = Vector3(50.0, 6.0, 1.0)
+
+[sub_resource type="PrismMesh" id="Mesh_Roof"]
+size = Vector3(54.0, 5.0, 8.0)
+
+[sub_resource type="BoxMesh" id="Mesh_Overhang"]
+size = Vector3(4.0, 0.2, 2.0)
+
+[sub_resource type="BoxMesh" id="Mesh_Door"]
+size = Vector3(1.6, 3.2, 0.2)
+
+[sub_resource type="BoxShape3D" id="Shape_DoorBody"]
+size = Vector3(3.0, 3.0, 2.0)
+
+[sub_resource type="BoxMesh" id="Mesh_Step"]
+size = Vector3(3.0, 0.25, 1.2)
+
+[sub_resource type="BoxMesh" id="Mesh_PorchLight"]
+size = Vector3(0.4, 0.15, 0.4)
+
+[node name="Yard" type="Node3D"]
+script = ExtResource("1_yard")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_Yard")
+
+[node name="MoonLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 8, 0)
+light_color = Color(0.55, 0.65, 0.85, 1)
+light_energy = 0.4
+shadow_enabled = true
+shadow_opacity = 0.8
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="GrassFloor" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 10.0)
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Geometry/GrassFloor"]
+mesh = SubResource("Mesh_Floor")
+surface_material_override/0 = SubResource("Mat_GrassFloor")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Geometry/GrassFloor"]
+shape = SubResource("Shape_Floor")
+
+[node name="Pathways" type="Node3D" parent="Geometry"]
+
+[node name="DirtPath" type="MeshInstance3D" parent="Geometry/Pathways"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 15.0)
+mesh = SubResource("Mesh_Path")
+surface_material_override/0 = SubResource("Mat_Path")
+
+[node name="Stairs" type="Node3D" parent="Geometry"]
+
+[node name="Step1" type="MeshInstance3D" parent="Geometry/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, -2.5)
+mesh = SubResource("Mesh_Step")
+surface_material_override/0 = SubResource("Mat_Path")
+
+[node name="Step2" type="MeshInstance3D" parent="Geometry/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, -3.5)
+mesh = SubResource("Mesh_Step")
+surface_material_override/0 = SubResource("Mat_Path")
+
+[node name="Step3" type="MeshInstance3D" parent="Geometry/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, -4.5)
+mesh = SubResource("Mesh_Step")
+surface_material_override/0 = SubResource("Mat_Path")
+
+[node name="Porch" type="MeshInstance3D" parent="Geometry/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.875, -6.0)
+mesh = SubResource("Mesh_Step")
+surface_material_override/0 = SubResource("Mat_Path")
+
+[node name="House" type="Node3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -6.5)
+
+[node name="Wall" type="StaticBody3D" parent="Geometry/House"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 0)
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Geometry/House/Wall"]
+mesh = SubResource("Mesh_Wall")
+surface_material_override/0 = SubResource("Mat_HouseExterior")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Geometry/House/Wall"]
+shape = SubResource("Shape_Wall")
+
+[node name="PitchedRoof" type="MeshInstance3D" parent="Geometry/House"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.0, 0.0)
+mesh = SubResource("Mesh_Roof")
+surface_material_override/0 = SubResource("Mat_HouseRoof")
+
+[node name="OverhangRoof" type="MeshInstance3D" parent="Geometry/House"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 1.0)
+mesh = SubResource("Mesh_Overhang")
+surface_material_override/0 = SubResource("Mat_HouseExterior")
+
+[node name="PorchLightMesh" type="MeshInstance3D" parent="Geometry/House"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.4, 1.5)
+mesh = SubResource("Mesh_PorchLight")
+surface_material_override/0 = SubResource("Mat_PorchLight")
+
+[node name="SpotLight3D" type="SpotLight3D" parent="Geometry/House/PorchLightMesh"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, -0.1, 0)
+light_color = Color(1, 0.6, 0.2, 1)
+light_energy = 1.0
+shadow_enabled = true
+spot_range = 10.0
+spot_angle = 50.0
+
+[node name="FrontDoor" type="Node3D" parent="Geometry/House"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0.4)
+
+[node name="DoorMesh" type="MeshInstance3D" parent="Geometry/House/FrontDoor"]
+mesh = SubResource("Mesh_Door")
+surface_material_override/0 = SubResource("Mat_DoorExt")
+
+[node name="DoorBody" type="Area3D" parent="Geometry/House/FrontDoor"]
+collision_layer = 0
+collision_mask = 2
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Geometry/House/FrontDoor/DoorBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.0)
+shape = SubResource("Shape_DoorBody")

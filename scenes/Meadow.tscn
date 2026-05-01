@@ -1,0 +1,138 @@
+[gd_scene load_steps=14 format=3 uid="uid://whispering_meadow"]
+
+[ext_resource type="Script" path="res://scripts/levels/Meadow.gd" id="1_meadow"]
+
+[sub_resource type="ProceduralSkyMaterial" id="Sky_sunset"]
+sky_top_color = Color(0.38, 0.55, 0.80, 1)
+sky_horizon_color = Color(0.95, 0.52, 0.38, 1)
+ground_bottom_color = Color(0.20, 0.28, 0.18, 1)
+ground_horizon_color = Color(0.55, 0.45, 0.30, 1)
+sun_angle_max = 10.0
+sun_curve = 0.25
+
+[sub_resource type="Sky" id="Sky_meadow"]
+sky_material = SubResource("Sky_sunset")
+
+[sub_resource type="Environment" id="Env_meadow"]
+background_mode = 2
+sky = SubResource("Sky_meadow")
+ambient_light_source = 3
+ambient_light_color = Color(0.95, 0.80, 0.68, 1)
+ambient_light_sky_contribution = 1.0
+ambient_light_energy = 1.2
+tonemap_mode = 2
+fog_enabled = true
+fog_density = 0.008
+fog_light_color = Color(0.90, 0.60, 0.42, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Grass"]
+albedo_color = Color(0.22, 0.40, 0.15, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_Flower"]
+albedo_color = Color(0.92, 0.88, 0.50, 1)
+roughness = 0.9
+emission_enabled = true
+emission = Color(0.3, 0.28, 0.12, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_Mountain"]
+albedo_color = Color(0.28, 0.24, 0.22, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="Mesh_Ground"]
+size = Vector3(500.0, 0.5, 500.0)
+
+[sub_resource type="BoxShape3D" id="Shape_Ground"]
+size = Vector3(500.0, 0.5, 500.0)
+
+[sub_resource type="SphereMesh" id="Mesh_Flower"]
+radius = 0.12
+height = 0.24
+
+[sub_resource type="PrismMesh" id="Mesh_Mountain"]
+size = Vector3(60.0, 30.0, 20.0)
+
+
+[node name="Meadow" type="Node3D"]
+script = ExtResource("1_meadow")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_meadow")
+
+[node name="SunLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 15, 0)
+light_color = Color(1.0, 0.72, 0.48, 1)
+light_energy = 1.8
+shadow_enabled = true
+shadow_opacity = 0.6
+
+[node name="Ground" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("Mesh_Ground")
+surface_material_override/0 = SubResource("Mat_Grass")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+shape = SubResource("Shape_Ground")
+
+[node name="Mountains" type="Node3D" parent="."]
+
+[node name="Mountain_L" type="MeshInstance3D" parent="Mountains"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 0, -90)
+mesh = SubResource("Mesh_Mountain")
+surface_material_override/0 = SubResource("Mat_Mountain")
+
+[node name="Mountain_C" type="MeshInstance3D" parent="Mountains"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -110)
+mesh = SubResource("Mesh_Mountain")
+surface_material_override/0 = SubResource("Mat_Mountain")
+
+[node name="Mountain_R" type="MeshInstance3D" parent="Mountains"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 0, -85)
+mesh = SubResource("Mesh_Mountain")
+surface_material_override/0 = SubResource("Mat_Mountain")
+
+[node name="Flowers" type="Node3D" parent="."]
+
+[node name="F1" type="MeshInstance3D" parent="Flowers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.12, 3.0)
+mesh = SubResource("Mesh_Flower")
+surface_material_override/0 = SubResource("Mat_Flower")
+
+[node name="F2" type="MeshInstance3D" parent="Flowers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 0.12, 5.5)
+mesh = SubResource("Mesh_Flower")
+surface_material_override/0 = SubResource("Mat_Flower")
+
+[node name="F3" type="MeshInstance3D" parent="Flowers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0, 0.12, 8.0)
+mesh = SubResource("Mesh_Flower")
+surface_material_override/0 = SubResource("Mat_Flower")
+
+[node name="F4" type="MeshInstance3D" parent="Flowers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0.12, 7.0)
+mesh = SubResource("Mesh_Flower")
+surface_material_override/0 = SubResource("Mat_Flower")
+
+[node name="F5" type="MeshInstance3D" parent="Flowers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 0.12, 12.0)
+mesh = SubResource("Mesh_Flower")
+surface_material_override/0 = SubResource("Mat_Flower")
+
+[node name="F6" type="MeshInstance3D" parent="Flowers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.0, 0.12, 10.0)
+mesh = SubResource("Mesh_Flower")
+surface_material_override/0 = SubResource("Mat_Flower")
+
+[node name="F7" type="MeshInstance3D" parent="Flowers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0.12, 4.5)
+mesh = SubResource("Mesh_Flower")
+surface_material_override/0 = SubResource("Mat_Flower")
+
+[node name="F8" type="MeshInstance3D" parent="Flowers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 0.12, 15.0)
+mesh = SubResource("Mesh_Flower")
+surface_material_override/0 = SubResource("Mat_Flower")

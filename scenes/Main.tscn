@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://clvwbbi8yhfp8"]
+
+[ext_resource type="Script" uid="uid://rpqa5uj0c7a" path="res://scripts/autoload/SceneLoader.gd" id="1_sceneloader"]
+[ext_resource type="PackedScene" path="res://scenes/UI/HUD.tscn" id="2_hud"]
+[ext_resource type="Script" uid="uid://bnmwwj7mdxmag" path="res://scripts/systems/SanitySystem.gd" id="4_sanity"]
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 1
+ambient_light_source = 2
+ambient_light_color = Color(0.04, 0.04, 0.05, 1)
+ambient_light_energy = 0.3
+
+[node name="Main" type="Node" unique_id=609469171]
+script = ExtResource("1_sceneloader")
+
+[node name="SceneContainer" type="Node3D" parent="." unique_id=509856718]
+
+[node name="ElaraContainer" type="Node3D" parent="." unique_id=940386495]
+
+[node name="SanitySystem" type="Node" parent="." unique_id=1645960624]
+script = ExtResource("4_sanity")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=215221709]
+environment = SubResource("Environment_main")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1606789908]
+layer = 10
+
+[node name="HUD" parent="UI" unique_id=1078511662 instance=ExtResource("2_hud")]
+
+[node name="FadeRect" type="ColorRect" parent="UI" unique_id=163121168]
+z_index = 100
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)

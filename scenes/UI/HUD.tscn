@@ -1,0 +1,203 @@
+[gd_scene load_steps=3 format=3 uid="uid://whispering_hud"]
+
+[ext_resource type="Script" path="res://scripts/ui/HUD.gd" id="1_hud"]
+[ext_resource type="Shader" path="res://assets/shaders/sanity_effect.gdshader" id="2_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sanity"]
+shader = ExtResource("2_shader")
+shader_parameter/vignette_intensity = 0.0
+shader_parameter/chroma_intensity = 0.0
+shader_parameter/pulse_speed = 0.0
+shader_parameter/vignette_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sanity_bg"]
+bg_color = Color(0.1, 0.1, 0.1, 0.6)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sanity_fill"]
+bg_color = Color(0.2, 0.8, 0.4, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_battery_fill"]
+bg_color = Color(0.3, 0.9, 0.5, 1)
+
+[node name="HUD" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_hud")
+
+; Full-screen sanity shader overlay (bawah semua UI)
+[node name="SanityOverlay" type="ColorRect" parent="."]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+color = Color(1, 1, 1, 0)
+material = SubResource("ShaderMaterial_sanity")
+mouse_filter = 2
+
+; Main HUD container
+[node name="HUDContainer" type="Control" parent="."]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+; ─── Sanity Section (kiri bawah) ─────────────────────────────────────────────
+
+[node name="SanitySection" type="VBoxContainer" parent="HUDContainer"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 200.0
+offset_bottom = 90.0
+
+[node name="SanityLabel" type="Label" parent="HUDContainer/SanitySection"]
+text = "SANITY: 100%"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+
+[node name="SanityBar" type="ProgressBar" parent="HUDContainer/SanitySection"]
+custom_minimum_size = Vector2(180, 14)
+max_value = 100.0
+value = 100.0
+show_percentage = false
+theme_override_styles/background = SubResource("StyleBoxFlat_sanity_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_sanity_fill")
+
+; ─── Battery Section (kiri bawah, di atas sanity) ────────────────────────────
+
+[node name="BatteryContainer" type="HBoxContainer" parent="HUDContainer"]
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -120.0
+offset_right = 200.0
+offset_bottom = -96.0
+visible = false
+
+[node name="BatteryLabel" type="Label" parent="HUDContainer/BatteryContainer"]
+text = "🔦"
+theme_override_font_sizes/font_size = 14
+
+[node name="BatteryBar" type="ProgressBar" parent="HUDContainer/BatteryContainer"]
+custom_minimum_size = Vector2(120, 14)
+max_value = 100.0
+value = 100.0
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_battery_fill")
+
+; ─── Item Icons (kanan bawah) ────────────────────────────────────────────────
+
+[node name="ItemsPanel" type="Panel" parent="HUDContainer"]
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -180.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 70.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_sanity_bg")
+
+[node name="ItemsContainer" type="HBoxContainer" parent="HUDContainer/ItemsPanel"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+alignment = 1
+
+[node name="KeyIcon" type="Label" parent="HUDContainer/ItemsPanel/ItemsContainer"]
+text = "🗝"
+visible = false
+theme_override_font_sizes/font_size = 28
+tooltip_text = "Kunci Koridor"
+
+[node name="FlashlightIcon" type="Label" parent="HUDContainer/ItemsPanel/ItemsContainer"]
+text = "🔦"
+visible = false
+theme_override_font_sizes/font_size = 28
+tooltip_text = "Senter"
+
+[node name="PhotoIcon" type="Label" parent="HUDContainer/ItemsPanel/ItemsContainer"]
+text = "📷"
+visible = false
+theme_override_font_sizes/font_size = 28
+tooltip_text = "Foto Raya"
+
+; ─── Interaction Prompt (tengah bawah) ───────────────────────────────────────
+
+[node name="PromptLabel" type="Label" parent="HUDContainer"]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -120.0
+offset_top = -60.0
+offset_right = 120.0
+offset_bottom = -30.0
+visible = false
+text = "Tekan E untuk berinteraksi"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 0.9)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 15
+
+; ─── Level Label (kanan atas, debug) ─────────────────────────────────────────
+
+[node name="LevelLabel" type="Label" parent="HUDContainer"]
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -160.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 36.0
+text = "Level: 0 / 8"
+visible = false
+horizontal_alignment = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 0.7)
+theme_override_font_sizes/font_size = 13
+
+; ─── Crosshair (tengah layar) ────────────────────────────────────────────────
+
+[node name="Crosshair" type="Label" parent="HUDContainer"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
+text = "+"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 0.5)
+theme_override_font_sizes/font_size = 18
+mouse_filter = 2

@@ -1,0 +1,257 @@
+[gd_scene load_steps=31 format=3 uid="uid://whispering_livingroom"]
+
+[ext_resource type="Script" path="res://scripts/levels/LivingRoom.gd" id="1_livingroom"]
+[ext_resource type="Script" path="res://scripts/systems/DecaySystem.gd" id="2_decay"]
+[ext_resource type="PackedScene" path="res://scenes/TheHollow.tscn" id="3_hollow"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_RoomWall"]
+albedo_color = Color(0.13, 0.11, 0.09, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_RoomFloor"]
+albedo_color = Color(0.09, 0.07, 0.05, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_Furniture"]
+albedo_color = Color(0.2, 0.2, 0.2, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_Door"]
+albedo_color = Color(0.3, 0.25, 0.2, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_RoomFloor"]
+size = Vector3(8.0, 0.1, 8.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_RoomCeiling"]
+size = Vector3(8.0, 0.1, 8.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Wall_Front"]
+size = Vector3(8.0, 6.0, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Wall_Back"]
+size = Vector3(8.0, 6.0, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Wall_Left"]
+size = Vector3(0.2, 6.0, 8.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Wall_Right"]
+size = Vector3(0.2, 6.0, 8.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_RoomFloor"]
+size = Vector3(8.0, 0.1, 8.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_RoomCeiling"]
+size = Vector3(8.0, 0.1, 8.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Wall_F"]
+size = Vector3(8.0, 6.0, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Wall_B"]
+size = Vector3(8.0, 6.0, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Wall_L"]
+size = Vector3(0.2, 6.0, 8.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Wall_R"]
+size = Vector3(0.2, 6.0, 8.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Desk"]
+size = Vector3(4.0, 0.8, 1.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Sofa"]
+size = Vector3(1.8, 0.7, 0.7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Item_Small"]
+size = Vector3(0.15, 0.05, 0.25)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Drawer"]
+size = Vector3(2.5, 1.2, 2.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Flashlight"]
+size = Vector3(0.2, 0.1, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Photo"]
+size = Vector3(0.25, 0.15, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Door"]
+size = Vector3(1.8, 3.0, 0.8)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_room"]
+direction = Vector3(0, 1, 0)
+spread = 30.0
+initial_velocity_min = 0.05
+initial_velocity_max = 0.2
+scale_min = 0.4
+scale_max = 1.0
+color = Color(0.4, 0.4, 0.4, 0.08)
+
+[sub_resource type="Environment" id="Environment_room"]
+background_mode = 1
+background_color = Color(0.01, 0.01, 0.01, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.07, 0.05, 0.03, 1)
+ambient_light_energy = 0.3
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.02, 0.01, 0.01, 1)
+fog_density = 0.015
+glow_enabled = false
+
+[node name="LivingRoom" type="Node3D"]
+script = ExtResource("1_livingroom")
+
+
+
+[node name="RoomStructure" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="RoomStructure"]
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RoomStructure/Floor"]
+mesh = SubResource("BoxMesh_RoomFloor")
+surface_material_override/0 = SubResource("Mat_RoomFloor")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoomStructure/Floor"]
+shape = SubResource("BoxShape3D_RoomFloor")
+
+[node name="Ceiling" type="StaticBody3D" parent="RoomStructure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.0, 0)
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RoomStructure/Ceiling"]
+mesh = SubResource("BoxMesh_RoomCeiling")
+surface_material_override/0 = SubResource("Mat_RoomWall")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoomStructure/Ceiling"]
+shape = SubResource("BoxShape3D_RoomCeiling")
+
+[node name="Wall_Front" type="StaticBody3D" parent="RoomStructure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, -4.0)
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RoomStructure/Wall_Front"]
+mesh = SubResource("BoxMesh_Wall_Front")
+surface_material_override/0 = SubResource("Mat_RoomWall")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoomStructure/Wall_Front"]
+shape = SubResource("BoxShape3D_Wall_F")
+
+[node name="Wall_Back" type="StaticBody3D" parent="RoomStructure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 4.0)
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RoomStructure/Wall_Back"]
+mesh = SubResource("BoxMesh_Wall_Back")
+surface_material_override/0 = SubResource("Mat_RoomWall")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoomStructure/Wall_Back"]
+shape = SubResource("BoxShape3D_Wall_B")
+
+[node name="Wall_Left" type="StaticBody3D" parent="RoomStructure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.0, 3.0, 0)
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RoomStructure/Wall_Left"]
+mesh = SubResource("BoxMesh_Wall_Left")
+surface_material_override/0 = SubResource("Mat_RoomWall")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoomStructure/Wall_Left"]
+shape = SubResource("BoxShape3D_Wall_L")
+
+[node name="Wall_Right" type="StaticBody3D" parent="RoomStructure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0, 3.0, 0)
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RoomStructure/Wall_Right"]
+mesh = SubResource("BoxMesh_Wall_Right")
+surface_material_override/0 = SubResource("Mat_RoomWall")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoomStructure/Wall_Right"]
+shape = SubResource("BoxShape3D_Wall_R")
+
+[node name="LightSystem" type="Node3D" parent="."]
+
+; VoxelGI dihapus — data=null menyebabkan VK_SUCCESS fence error dan blackout
+
+[node name="Furniture" type="Node3D" parent="."]
+
+[node name="Desk" type="Node3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0, 0.4, 3.0)
+
+[node name="DeskTop" type="MeshInstance3D" parent="Furniture/Desk"]
+visible = false
+mesh = SubResource("BoxMesh_Desk")
+surface_material_override/0 = SubResource("Mat_Furniture")
+
+[node name="Drawer" type="Area3D" parent="Furniture/Desk"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0, 0.45)
+collision_layer = 4
+collision_mask = 2
+monitoring = false
+monitorable = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Furniture/Desk/Drawer"]
+shape = SubResource("BoxShape3D_Drawer")
+
+[node name="FlashlightItem" type="Area3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.4, -2.0)
+collision_layer = 4
+collision_mask = 2
+monitoring = false
+monitorable = true
+
+[node name="FlashlightMesh" type="MeshInstance3D" parent="Furniture/FlashlightItem"]
+visible = false
+mesh = SubResource("BoxMesh_Item_Small")
+surface_material_override/0 = SubResource("Mat_Furniture")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Furniture/FlashlightItem"]
+shape = SubResource("BoxShape3D_Flashlight")
+
+[node name="Sofa" type="Node3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.35, 1.0)
+visible = false
+
+[node name="SofaMesh" type="MeshInstance3D" parent="Furniture/Sofa"]
+mesh = SubResource("BoxMesh_Sofa")
+surface_material_override/0 = SubResource("Mat_Furniture")
+
+; RayaPhotoHidden dihapus — foto Raya tidak digunakan
+
+[node name="CorridorDoor" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -3.9)
+
+[node name="DoorMesh" type="MeshInstance3D" parent="CorridorDoor"]
+mesh = SubResource("BoxMesh_Wall_Front")
+surface_material_override/0 = SubResource("Mat_Door")
+
+[node name="DoorBody" type="Area3D" parent="CorridorDoor"]
+collision_layer = 0
+collision_mask = 2
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CorridorDoor/DoorBody"]
+shape = SubResource("BoxShape3D_Door")
+
+[node name="SmokeParticles" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+emitting = false
+amount = 16
+process_material = SubResource("ParticleProcessMaterial_room")
+visibility_aabb = AABB(-4, 0, -4, 8, 4, 8)
+lifetime = 10.0
+
+[node name="TheHollow_Final" parent="." instance=ExtResource("3_hollow")]
+visible = false
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
+
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+enabled = true
+
+[node name="DecaySystem" type="Node" parent="."]
+script = ExtResource("2_decay")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_room")

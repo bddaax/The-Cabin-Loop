@@ -1,0 +1,290 @@
+[gd_scene load_steps=26 format=3 uid="uid://whispering_corridor"]
+
+[ext_resource type="Script" path="res://scripts/levels/Corridor.gd" id="1_corridor"]
+[ext_resource type="Script" path="res://scripts/levels/AnomalyManager.gd" id="2_anomaly"]
+[ext_resource type="Script" path="res://scripts/systems/DecaySystem.gd" id="3_decay"]
+[ext_resource type="PackedScene" path="res://scenes/TheHollow.tscn" id="4_hollow"]
+
+[sub_resource type="Environment" id="Environment_corridor"]
+background_mode = 1
+background_color = Color(0.02, 0.01, 0.01, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.05, 0.04, 0.04, 1)
+ambient_light_energy = 0.3
+fog_enabled = true
+fog_light_color = Color(0.03, 0.02, 0.02, 1)
+fog_density = 0.02
+glow_enabled = false
+
+[sub_resource type="StandardMaterial3D" id="Mat_Wall"]
+albedo_color = Color(0.12, 0.14, 0.12, 1)
+roughness = 0.95
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_Floor"]
+albedo_color = Color(0.09, 0.07, 0.05, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_Ceiling"]
+albedo_color = Color(0.10, 0.11, 0.09, 1)
+roughness = 0.9
+
+; ─── Corridor geometry (BoxMesh primitives) ──────────────────────────────────
+
+[sub_resource type="BoxMesh" id="BoxMesh_Floor"]
+size = Vector3(4.0, 0.1, 24.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Ceiling"]
+size = Vector3(4.0, 0.1, 24.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_WallLeft"]
+size = Vector3(0.2, 3.5, 24.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_WallRight"]
+size = Vector3(0.2, 3.5, 24.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Floor"]
+size = Vector3(4.0, 0.1, 24.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Ceiling"]
+size = Vector3(4.0, 0.1, 24.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_WallLeft"]
+size = Vector3(0.2, 3.5, 24.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_WallRight"]
+size = Vector3(0.2, 3.5, 24.0)
+
+; ─── Door detection shapes ───────────────────────────────────────────────────
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ExitTrigger"]
+size = Vector3(3.5, 3.0, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_EntranceTrigger"]
+size = Vector3(3.5, 3.0, 0.5)
+
+; ─── OmniLight for main corridor lighting ────────────────────────────────────
+
+[sub_resource type="BoxMesh" id="BoxMesh_Door"]
+size = Vector3(1.8, 2.5, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Door"]
+albedo_color = Color(0.3, 0.2, 0.15, 1)
+roughness = 0.8
+
+; ─── Anomaly placeholder mesh (chair) ────────────────────────────────────────
+
+[sub_resource type="BoxMesh" id="BoxMesh_Chair"]
+size = Vector3(0.5, 0.9, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Chair"]
+albedo_color = Color(0.28, 0.22, 0.18, 1)
+roughness = 0.85
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Chair"]
+size = Vector3(0.5, 0.9, 0.5)
+
+; ─── Smoke particle placeholder ──────────────────────────────────────────────
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_1"]
+particle_flag_disable_z = false
+emission_shape = 0
+direction = Vector3(0, 1, 0)
+spread = 45.0
+gravity = Vector3(0, 0.1, 0)
+initial_velocity_min = 0.1
+initial_velocity_max = 0.4
+scale_min = 0.3
+scale_max = 0.8
+color = Color(0.5, 0.5, 0.5, 0.15)
+
+; ═══════════════════════════════════════════════════════════════════════════
+;  SCENE TREE
+; ═══════════════════════════════════════════════════════════════════════════
+
+[node name="Corridor" type="Node3D"]
+script = ExtResource("1_corridor")
+
+; ─── Corridor Geometry ───────────────────────────────────────────────────────
+
+[node name="CorridorMesh" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="CorridorMesh"]
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CorridorMesh/Floor"]
+mesh = SubResource("BoxMesh_Floor")
+surface_material_override/0 = SubResource("Mat_Floor")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CorridorMesh/Floor"]
+shape = SubResource("BoxShape3D_Floor")
+
+[node name="Ceiling" type="StaticBody3D" parent="CorridorMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CorridorMesh/Ceiling"]
+mesh = SubResource("BoxMesh_Ceiling")
+surface_material_override/0 = SubResource("Mat_Ceiling")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CorridorMesh/Ceiling"]
+shape = SubResource("BoxShape3D_Ceiling")
+
+[node name="WallLeft" type="StaticBody3D" parent="CorridorMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1, 1.75, 0)
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CorridorMesh/WallLeft"]
+mesh = SubResource("BoxMesh_WallLeft")
+surface_material_override/0 = SubResource("Mat_Wall")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CorridorMesh/WallLeft"]
+shape = SubResource("BoxShape3D_WallLeft")
+
+[node name="WallRight" type="StaticBody3D" parent="CorridorMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 1.75, 0)
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CorridorMesh/WallRight"]
+mesh = SubResource("BoxMesh_WallRight")
+surface_material_override/0 = SubResource("Mat_Wall")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CorridorMesh/WallRight"]
+shape = SubResource("BoxShape3D_WallRight")
+
+; ─── Light System ─────────────────────────────────────────────────────────────
+
+[node name="LightSystem" type="Node3D" parent="."]
+
+[node name="Light_Center1" type="OmniLight3D" parent="LightSystem"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, -6)
+light_color = Color(0.85, 0.75, 0.55, 1)
+light_energy = 1.5
+omni_range = 8.0
+shadow_enabled = false
+
+[node name="Light_Center2" type="OmniLight3D" parent="LightSystem"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 6)
+light_color = Color(0.85, 0.75, 0.55, 1)
+light_energy = 1.5
+omni_range = 8.0
+shadow_enabled = false
+
+[node name="EmergencyLight_Left" type="SpotLight3D" parent="LightSystem"]
+transform = Transform3D(1, 0, 0, 0, -1, 0, 0, 0, -1, -1.8, 3.3, -6)
+visible = false
+light_color = Color(0.9, 0.1, 0.05, 1)
+light_energy = 2.0
+spot_range = 5.0
+spot_angle = 60.0
+
+[node name="EmergencyLight_Right" type="SpotLight3D" parent="LightSystem"]
+transform = Transform3D(1, 0, 0, 0, -1, 0, 0, 0, -1, 1.8, 3.3, 6)
+visible = false
+light_color = Color(0.9, 0.1, 0.05, 1)
+light_energy = 2.0
+spot_range = 5.0
+spot_angle = 60.0
+
+; ─── Props & Anomaly Objects ─────────────────────────────────────────────────
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="AnomalyObjects" type="Node3D" parent="Props"]
+
+[node name="Anomaly_Chair" type="StaticBody3D" parent="Props/AnomalyObjects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.45, -3)
+collision_layer = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Props/AnomalyObjects/Anomaly_Chair"]
+mesh = SubResource("BoxMesh_Chair")
+surface_material_override/0 = SubResource("Mat_Chair")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Props/AnomalyObjects/Anomaly_Chair"]
+shape = SubResource("BoxShape3D_Chair")
+
+; ─── Decay Meshes (debris) ───────────────────────────────────────────────────
+
+[node name="DecayMeshes" type="Node3D" parent="."]
+
+[node name="Debris_1" type="MeshInstance3D" parent="DecayMeshes"]
+transform = Transform3D(0.3, 0.1, 0, -0.1, 0.3, 0, 0, 0, 0.3, 0.8, 0.15, -8)
+visible = false
+mesh = SubResource("BoxMesh_Chair")
+
+[node name="Debris_2" type="MeshInstance3D" parent="DecayMeshes"]
+transform = Transform3D(0.2, 0.05, 0.1, -0.05, 0.2, 0, -0.1, 0, 0.2, -1.2, 0.1, 2)
+visible = false
+mesh = SubResource("BoxMesh_Chair")
+
+[node name="Debris_3" type="MeshInstance3D" parent="DecayMeshes"]
+transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 1.5, 0.12, 5)
+visible = false
+mesh = SubResource("BoxMesh_Chair")
+
+; ─── Smoke Particles ─────────────────────────────────────────────────────────
+
+[node name="SmokeParticles" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+emitting = false
+amount = 24
+process_material = SubResource("ParticleProcessMaterial_1")
+visibility_aabb = AABB(-3, 0, -12, 6, 4, 24)
+lifetime = 8.0
+
+; ─── Doors ───────────────────────────────────────────────────────────────────
+
+[node name="ExitDoor" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -12)
+
+[node name="DoorMesh" type="MeshInstance3D" parent="ExitDoor"]
+mesh = SubResource("BoxMesh_Door")
+surface_material_override/0 = SubResource("Mat_Door")
+
+[node name="ExitArea" type="Area3D" parent="ExitDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.4)
+collision_layer = 0
+collision_mask = 2
+monitoring = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ExitDoor/ExitArea"]
+shape = SubResource("BoxShape3D_ExitTrigger")
+
+[node name="EntranceDoor" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 12)
+
+[node name="DoorMesh" type="MeshInstance3D" parent="EntranceDoor"]
+mesh = SubResource("BoxMesh_Door")
+surface_material_override/0 = SubResource("Mat_Door")
+
+[node name="EntranceArea" type="Area3D" parent="EntranceDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.4)
+collision_layer = 0
+collision_mask = 2
+monitoring = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EntranceDoor/EntranceArea"]
+shape = SubResource("BoxShape3D_EntranceTrigger")
+
+; ─── Systems ─────────────────────────────────────────────────────────────────
+
+[node name="AnomalyManager" type="Node" parent="."]
+script = ExtResource("2_anomaly")
+
+[node name="DecaySystem" type="Node" parent="."]
+script = ExtResource("3_decay")
+
+; ─── The Hollow ──────────────────────────────────────────────────────────────
+
+[node name="TheHollow" parent="." instance=ExtResource("4_hollow")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8)
+
+; ─── Navigation ──────────────────────────────────────────────────────────────
+
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+enabled = true
+
+; ─── WorldEnvironment ────────────────────────────────────────────────────────
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_corridor")

@@ -1,0 +1,66 @@
+[gd_scene load_steps=5 format=3 uid="uid://whispering_hollow"]
+
+[ext_resource type="Script" path="res://scripts/enemies/TheHollow.gd" id="1_hollow"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hollow"]
+radius = 0.4
+height = 1.9
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_vision"]
+radius = 6.0
+height = 3.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_flash"]
+radius = 18.0
+
+[node name="TheHollow" type="CharacterBody3D"]
+script = ExtResource("1_hollow")
+collision_layer = 4
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+shape = SubResource("CapsuleShape3D_hollow")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+mesh = null
+visible = false
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.5
+target_desired_distance = 1.0
+path_max_distance = 3.0
+navigation_layers = 1
+pathfinding_algorithm = 0
+path_postprocessing = 0
+avoidance_enabled = true
+radius = 0.5
+max_neighbors = 10
+
+[node name="VisionCone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+collision_layer = 0
+collision_mask = 2
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="VisionCone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4.0)
+shape = SubResource("CylinderShape3D_vision")
+
+[node name="ObstacleRay" type="RayCast3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+enabled = true
+target_position = Vector3(0, 0, -12)
+collision_mask = 1
+
+[node name="FlashlightDetectArea" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+collision_layer = 0
+collision_mask = 2
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FlashlightDetectArea"]
+shape = SubResource("SphereShape3D_flash")
