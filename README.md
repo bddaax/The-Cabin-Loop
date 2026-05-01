@@ -50,8 +50,34 @@ By Level 6–8, you will be in TOTAL DARKNESS. Your 3D flashlight is your only l
 Original code & character models developed by [@bddaax](https://github.com/bddaax). I used 3D shading techniques to give the player character volume in the Godot engine.
 
 **External Assets:**
-- **3D Models:** Levraicoincoin (itch.io), Sketchfab (Crying Head, Vase, Poster)
-- **Audio:** Pixabay (Horror Scream, Nature Ambient)
+
+3D Models — [Sketchfab](https://sketchfab.com):
+| Model | Used For |
+|-------|----------|
+| Crying Head | Level 4 — enemy horde |
+| Flesh Blob | Level 5 — boss encounter |
+| Vase | Living room anomaly prop |
+| Poster | Wall decoration prop |
+| Backrooms Long Hall | Corridor environment |
+| Double Door | Corridor exit props |
+| Dumpster (4096px) | Outdoor scene prop |
+| Old Rusty Car | Outdoor scene prop |
+| Pine Forest | Outdoor environment |
+| Pine Trees Pack (PS1 Low Poly) | Outdoor environment |
+| Simple Grass Chunks | Ground cover |
+| Wet Floor Sign | Indoor prop |
+
+Audio — [Pixabay](https://pixabay.com):
+| File | Used For |
+|------|----------|
+| scream.wav | Horror scream SFX |
+| breath.wav | Player breathing ambience |
+| footstep.ogg | Player footstep SFX |
+| hollow_aura.wav | The Hollow presence SFX |
+| corridor.mp3 | Corridor ambient loop |
+| forest.mp3 | Outdoor ambient loop |
+| menu.mp3 | Main menu music |
+| zombie.mp3 | Enemy proximity SFX |
 
 ---
 
