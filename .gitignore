@@ -17,3 +17,10 @@ mono_crash.*.json
 
 # Ignore large 3D models in assets root to prevent pushing to GitHub
 assets/*.glb
+
+# macOS system files
+.DS_Store
+
+# Log/output files
+out.txt
+*.log
