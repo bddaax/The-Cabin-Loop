@@ -27,7 +27,7 @@ const FOG_DENSITY_PER_LEVEL: Array[float] = [
 
 const SMOKE_ACTIVE_FROM_LEVEL: int = 5
 
-const EMERGENCY_LIGHT_FROM_LEVEL: int = 6
+const EMERGENCY_LIGHT_FROM_LEVEL: int = 99
 
 const TOTAL_DARK_FROM_LEVEL: int = 7
 

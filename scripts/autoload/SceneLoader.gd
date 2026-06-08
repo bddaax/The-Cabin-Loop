@@ -12,6 +12,7 @@ const TITLE_SCREEN_PATH := "res://scenes/UI/TitleScreen.tscn"
 @onready var scene_container: Node3D = $SceneContainer
 @onready var elara_container: Node3D = $ElaraContainer
 @onready var fade_rect: ColorRect = $UI/FadeRect
+@onready var level_title_label: Label = $UI/FadeRect/LevelTitleLabel
 @onready var hud: Node = $UI/HUD
 
 var _current_scene_instance: Node = null
@@ -99,7 +100,7 @@ func _on_transition_to_corridor(level_num: int) -> void:
 	if _is_transitioning:
 		return
 	print("[SceneLoader] Loading Corridor for level %d..." % level_num)
-	_swap_scene(CORRIDOR_PATH, Vector3(0, 0.5, 10))
+	_swap_scene(CORRIDOR_PATH, Vector3(0, 0.5, 10), "LEVEL %d" % level_num)
 
 func _on_transition_to_meadow() -> void:
 	if _is_transitioning:
@@ -107,10 +108,13 @@ func _on_transition_to_meadow() -> void:
 	print("[SceneLoader] Loading Meadow ending scene...")
 	_swap_scene(MEADOW_PATH, Vector3(0, 0, 5))
 
-func _swap_scene(scene_path: String, player_spawn: Vector3) -> void:
+func _swap_scene(scene_path: String, player_spawn: Vector3, title_text: String = "") -> void:
 	_is_transitioning = true
 
 	await fade(1.0, 0.6)
+
+	if title_text != "":
+		await _show_level_title(title_text)
 
 	if is_instance_valid(_current_scene_instance):
 		_current_scene_instance.queue_free()
@@ -134,6 +138,10 @@ func _swap_scene(scene_path: String, player_spawn: Vector3) -> void:
 
 	print("[SceneLoader] Scene loaded: %s | Elara at %s" % [scene_path, str(player_spawn)])
 
+	if title_text != "":
+		await get_tree().create_timer(0.6).timeout
+		await _hide_level_title()
+
 	await fade(0.0, 0.8)
 	_is_transitioning = false
 
@@ -141,6 +149,24 @@ func fade(target_alpha: float, duration: float) -> void:
 	var tween := create_tween()
 	tween.tween_property(fade_rect, "color:a", target_alpha, duration).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
+
+func _show_level_title(title_text: String) -> void:
+	if not is_instance_valid(level_title_label):
+		return
+	level_title_label.text = title_text
+	level_title_label.modulate.a = 0.0
+	level_title_label.visible = true
+	var tween := create_tween()
+	tween.tween_property(level_title_label, "modulate:a", 1.0, 0.4).set_ease(Tween.EASE_IN_OUT)
+	await tween.finished
+
+func _hide_level_title() -> void:
+	if not is_instance_valid(level_title_label):
+		return
+	var tween := create_tween()
+	tween.tween_property(level_title_label, "modulate:a", 0.0, 0.4).set_ease(Tween.EASE_IN_OUT)
+	await tween.finished
+	level_title_label.visible = false
 
 func _on_game_state_changed(new_state: GameManager.GameState) -> void:
 	match new_state:

@@ -45,7 +45,7 @@ signal transition_to_corridor(level_num: int)
 
 signal transition_to_meadow()
 
-const MAX_LEVELS: int = 8
+const MAX_LEVELS: int = 11
 
 const SANITY_MAX: float = 100.0
 
@@ -67,12 +67,15 @@ const LEVEL_ANOMALY_MAP: Dictionary = {
 	6: false,
 	7: false,
 	8: true,
+	9: false,
+	10: true,
+	11: true,
 }
 
 const NO_ANOMALY_CHANCE: float = 0.30
 
 const SANITY_DRAIN_RATES: Array[float] = [
-	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 ]
 
 const SANITY_WRONG_DECISION_PENALTY: float = 10.0

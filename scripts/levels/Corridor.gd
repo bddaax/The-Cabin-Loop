@@ -11,10 +11,15 @@ var _is_setup: bool = false
 var _player_in_corridor: bool = false
 var shtt_player: AudioStreamPlayer
 var _level7_zombie_spawned := false
-var _level8_zombie_spawned := false
+var _level11_facing_back := false
+var _level11_flash_timer := 0.0
 var _crying_heads: Array = []
 var _crying_head_chase_active: bool = false
 var _level4_heads_spawned: bool = false
+var _level8_zombie_spawned: bool = false
+var _level8_zombie_chase_active: bool = false
+var _level8_zombie: Node3D = null
+var _level8_scream_player: AudioStreamPlayer
 
 func _ready() -> void:
 	var light_node := get_node_or_null("LightSystem")
@@ -74,7 +79,13 @@ func _ready() -> void:
 		_setup_level7_darkness()
 
 	if GameManager.current_level == 8:
-		_setup_level8_fake_out()
+		_setup_level8_injured_zombie()
+
+	if GameManager.current_level == 10:
+		_setup_level10_wall_zombie()
+
+	if GameManager.current_level == 11:
+		_setup_level11_fake_out()
 
 	var cm := get_node_or_null("CorridorMesh")
 	if is_instance_valid(cm):
@@ -88,7 +99,7 @@ func _ready() -> void:
 	if is_instance_valid(decay_system):
 		decay_system.tween_lights_to_level(GameManager.current_level, 1.5)
 
-	if GameManager.current_level in [7, 8]:
+	if GameManager.current_level in [7, 11]:
 		shtt_player = AudioStreamPlayer.new()
 		var stream = load("res://assets/audioo/zombie.mp3")
 		if stream:
@@ -238,6 +249,106 @@ func _setup_level6_dimming() -> void:
 		else:
 			add_child(fl)
 
+func _setup_level8_injured_zombie() -> void:
+	if not GameManager.current_level_has_anomaly:
+		return
+
+	var exit_door := get_node_or_null("ExitDoor")
+	if not is_instance_valid(exit_door):
+		return
+
+	_level8_scream_player = AudioStreamPlayer.new()
+	var stream = load("res://assets/audio/girl_zombie.mp3")
+	if stream:
+		_level8_scream_player.stream = stream
+		add_child(_level8_scream_player)
+
+	print("[Corridor] Level 8 setup: injured zombie akan muncul dekat pintu depan, anomaly=%s" % str(GameManager.current_level_has_anomaly))
+
+func _spawn_level8_injured_zombie(player_pos: Vector3) -> void:
+	var pk := load("res://assets/monster/animated_injured_zombie_crawling_loop.glb") as PackedScene
+	if not pk:
+		print("[Corridor] WARN: animated_injured_zombie_crawling_loop.glb tidak ditemukan")
+		return
+
+	var zombie := pk.instantiate() as Node3D
+	var spawn_pos := Vector3(player_pos.x, -0.25, player_pos.z - 1.5)
+	zombie.position = spawn_pos
+	zombie.scale = Vector3.ONE * 1.1
+	# Hadapkan ke arah player sejak awal muncul, bukan menghadap pintu
+	var look_target := Vector3(player_pos.x, spawn_pos.y, player_pos.z)
+	if look_target.distance_to(spawn_pos) > 0.05:
+		zombie.look_at(look_target, Vector3.UP)
+	add_child(zombie)
+	_play_loop_animation(zombie)
+	_level8_zombie = zombie
+
+	# Naik sedikit saja dari celah lantai — biar kelihatan merangkak keluar,
+	# bukan berdiri tegak keluar dari tanah
+	var rise := create_tween()
+	rise.tween_property(zombie, "position:y", 0.0, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	rise.tween_callback(func(): _level8_zombie_chase_active = true)
+
+	if _level8_scream_player and _level8_scream_player.stream:
+		_level8_scream_player.play()
+
+	print("[Corridor] Level 8: Injured zombie merangkak keluar dari bawah lantai!")
+
+func _setup_level10_wall_zombie() -> void:
+	for l in get_tree().get_nodes_in_group("corridor_lights"):
+		if l is Light3D:
+			(l as Light3D).light_energy *= 0.4
+	for l in get_tree().get_nodes_in_group("emergency_lights"):
+		if l is Light3D:
+			(l as Light3D).light_energy *= 0.4
+	print("[Corridor] Level 10: Lights dimmed.")
+
+	if not GameManager.current_level_has_anomaly:
+		return
+
+	var entrance_door := get_node_or_null("EntranceDoor")
+	if not is_instance_valid(entrance_door):
+		return
+
+	var trigger := Area3D.new()
+	trigger.collision_layer = 0
+	trigger.collision_mask = 2
+	trigger.position = Vector3(0, 1.0, -4.0)
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(5, 5, 2)
+	cs.shape = box
+	trigger.add_child(cs)
+	add_child(trigger)
+	trigger.body_entered.connect(func(body: Node3D):
+		if body.is_in_group("player"):
+			var pk = load("res://assets/monster/zombie.glb")
+			if pk:
+				var zombie = pk.instantiate() as Node3D
+				zombie.position = Vector3(-1.55, 0, 9.5)
+				zombie.rotation_degrees = Vector3(0, 90, 0)
+				zombie.scale = Vector3.ONE * 0.85
+				add_child(zombie)
+				_play_loop_animation(zombie)
+			trigger.queue_free()
+	)
+	print("[Corridor] Level 10: Wall zombie trigger ready.")
+
+func _play_loop_animation(node: Node) -> void:
+	var to_check: Array = [node]
+	var anim_player: AnimationPlayer = null
+	while to_check.size() > 0:
+		var n = to_check.pop_back()
+		if n is AnimationPlayer:
+			anim_player = n
+			break
+		to_check.append_array(n.get_children())
+	if anim_player:
+		var anims: PackedStringArray = anim_player.get_animation_list()
+		if anims.size() > 0:
+			anim_player.get_animation(anims[0]).loop_mode = Animation.LOOP_LINEAR
+			anim_player.play(anims[0])
+
 func _on_exit_area_entered(body: Node3D) -> void:
 	if not body.is_in_group("player") or not _player_in_corridor:
 		return
@@ -270,7 +381,7 @@ func _setup_hollow() -> void:
 
 	var level := GameManager.current_level
 
-	if level not in [7, 8]:
+	if level not in [7, 11]:
 		the_hollow.visible = false
 		the_hollow.set_process(false)
 		the_hollow.set_physics_process(false)
@@ -287,24 +398,15 @@ func _setup_hollow() -> void:
 			the_hollow.set_detect_flashlight(false)
 		return
 
-	if level == 8 and GameManager.current_level_has_anomaly:
-		the_hollow.visible = true
+	if level == 11:
+		the_hollow.visible = false
 		the_hollow.global_position = Vector3(0, 0.1, -10)
 		the_hollow.rotation_degrees.y = 180.0
-		if the_hollow.has_method("activate"):
-			the_hollow.activate()
+		the_hollow.set_process(false)
+		the_hollow.set_physics_process(false)
+		if the_hollow.has_method("set_detect_flashlight"):
+			the_hollow.set_detect_flashlight(false)
 		return
-
-	the_hollow.global_position = Vector3(0, 0.1, -10)
-	the_hollow.rotation_degrees.y = 180.0
-
-	if the_hollow.has_method("set_patrol_from_world_positions"):
-		the_hollow.set_patrol_from_world_positions([
-			Vector3(0, 0, -10),
-			Vector3(0, 0, 8),
-		])
-	if the_hollow.has_method("activate"):
-		the_hollow.activate()
 
 func _process(delta: float) -> void:
 	if GameManager.current_level == 4 and _player_in_corridor and not _level4_heads_spawned:
@@ -330,7 +432,24 @@ func _process(delta: float) -> void:
 					head.global_position += flat_dir * 4.5 * delta
 					head.look_at(head.global_position + flat_dir, Vector3.UP)
 
-	if GameManager.current_level in [7, 8] and is_instance_valid(the_hollow) and _player_in_corridor:
+	if GameManager.current_level == 8 and GameManager.current_level_has_anomaly and _player_in_corridor and not _level8_zombie_spawned:
+		var players = get_tree().get_nodes_in_group("player")
+		if players.size() > 0:
+			var player := players[0] as Node3D
+			if player.global_position.z < -8.0:
+				_level8_zombie_spawned = true
+				_spawn_level8_injured_zombie(player.global_position)
+
+	if _level8_zombie_chase_active and GameManager.current_level == 8 and _player_in_corridor and is_instance_valid(_level8_zombie):
+		# Target entrance door / pintu belakang (Z > 0) — kabur ke sana sampai aman
+		var target_pos := Vector3(0.0, 0.0, 12.0)
+		var flat_dir := Vector3(target_pos.x - _level8_zombie.global_position.x, 0.0, target_pos.z - _level8_zombie.global_position.z)
+		if flat_dir.length() > 0.5:
+			flat_dir = flat_dir.normalized()
+			_level8_zombie.global_position += flat_dir * 1.7 * delta
+			_level8_zombie.look_at(_level8_zombie.global_position + flat_dir, Vector3.UP)
+
+	if GameManager.current_level in [7, 11] and is_instance_valid(the_hollow) and _player_in_corridor:
 		var players = get_tree().get_nodes_in_group("player")
 		if players.size() > 0:
 			var player = players[0]
@@ -358,21 +477,34 @@ func _process(delta: float) -> void:
 							the_hollow.look_at(player.global_position, Vector3.UP)
 							the_hollow.rotation.x = 0
 							the_hollow.rotation.z = 0
-				elif GameManager.current_level == 8:
-					if not _level8_zombie_spawned:
-						if forward.z > 0.5:
-							_level8_zombie_spawned = true
+				elif GameManager.current_level == 11:
+					if forward.z > 0.5:
+						if not _level11_facing_back:
+							_level11_facing_back = true
 							the_hollow.visible = true
+							_level11_flash_timer = 2.0
 							if shtt_player and shtt_player.stream:
 								shtt_player.play()
+							for hud in get_tree().get_nodes_in_group("game_hud"):
+								if hud.has_method("flash_scare"):
+									hud.flash_scare()
 							var dir = forward
 							dir.y = 0
 							dir = dir.normalized()
-							the_hollow.global_position = player.global_position + dir * 1.5
+							var spawn_pos = player.global_position + dir * 2.0
+							spawn_pos.y -= 1.6
+							the_hollow.global_position = spawn_pos
 							if dir.length() > 0.1:
 								the_hollow.look_at(player.global_position, Vector3.UP)
-								the_hollow.rotation.x = 0
+								the_hollow.rotation.x = deg_to_rad(-16.0)
 								the_hollow.rotation.z = 0
+					else:
+						_level11_facing_back = false
+
+					if the_hollow.visible:
+						_level11_flash_timer -= delta
+						if _level11_flash_timer <= 0.0:
+							the_hollow.visible = false
 
 func _spawn_crying_head_horde() -> void:
 	var pk := load("res://assets/crying_head.glb") as PackedScene
@@ -565,41 +697,48 @@ func _add_chandelier(parent: Node3D, pos: Vector3) -> void:
 	light.position = pos + Vector3(0, -0.5, 0)
 	parent.add_child(light)
 
-func _setup_level8_fake_out() -> void:
+func _setup_level11_fake_out() -> void:
 	var exit_door := get_node_or_null("ExitDoor")
 	if is_instance_valid(exit_door):
 		for child in exit_door.get_children():
 			if child.name == "DoorMesh":
 				child.visible = false
 			elif child.name.begins_with("double_door"):
-				var l_door = child.get_node_or_null("Sketchfab_model/b497ea9de65748f2975b672baaf8991a_fbx/RootNode/OLD_DOOR/L")
-				var r_door = child.get_node_or_null("Sketchfab_model/b497ea9de65748f2975b672baaf8991a_fbx/RootNode/OLD_DOOR/R")
-				if is_instance_valid(l_door):
-					l_door.rotation_degrees.z = -90
-				if is_instance_valid(r_door):
-					r_door.rotation_degrees.z = 90
+				# Hide the whole door (frame included) so the opening reads as a
+				# clean dark doorway into the portal — rotating the leaves open
+				# left the frame mesh poking through into view.
+				child.visible = false
 
-	var portal := MeshInstance3D.new()
-	var pm := QuadMesh.new(); pm.size = Vector2(2.5, 3.0)
-	portal.mesh = pm
-	var mat := StandardMaterial3D.new()
-	var tex = load("res://assets/pine_forest_1.jpg")
-	if tex:
-		mat.albedo_texture = tex
-	else:
-		mat.albedo_color = Color(0.85, 0.95, 1.0)
-	mat.emission_enabled = true; mat.emission = Color(0.6, 0.85, 1.0)
-	mat.emission_energy_multiplier = 0.5
-	if tex:
-		mat.emission_texture = tex
-	portal.set_surface_override_material(0, mat)
-	portal.position = Vector3(0, 1.25, -12.1)
-	add_child(portal)
+	var pine_forest := load("res://assets/pine_forest.glb") as PackedScene
+	if pine_forest:
+		var forest := pine_forest.instantiate()
+		_strip_oversized_meshes(forest, 80.0)
+		forest.scale = Vector3.ONE * 0.25
+		forest.position = Vector3(0, 0.2, -22)
+		add_child(forest)
+
+	var car_scene := load("res://assets/old_rusty_car.glb") as PackedScene
+	if car_scene:
+		var car := car_scene.instantiate() as Node3D
+		var s := 0.01
+		car.scale = Vector3(s, s, s)
+		car.position = Vector3(-1.5, 0, -24)
+		car.rotation_degrees.y = -30.0
+		add_child(car)
 
 	var light_portal := OmniLight3D.new()
-	light_portal.light_color = Color(0.8, 0.95, 1.0)
-	light_portal.light_energy = 4.0; light_portal.omni_range = 8.0
-	light_portal.position = Vector3(0, 1.25, -11.5)
+	light_portal.light_color = Color(0.8, 0.9, 0.85)
+	light_portal.light_energy = 2.0; light_portal.omni_range = 6.0
+	light_portal.position = Vector3(0, 2.0, -18)
 	add_child(light_portal)
 
-	print("[Corridor] Level 8 Fake Out applied.")
+	print("[Corridor] Level 11 Fake Out applied.")
+
+func _strip_oversized_meshes(node: Node, max_size: float) -> void:
+	if node is VisualInstance3D:
+		var sz: Vector3 = node.get_aabb().size
+		if sz.x > max_size or sz.y > max_size or sz.z > max_size:
+			node.queue_free()
+			return
+	for child in node.get_children():
+		_strip_oversized_meshes(child, max_size)

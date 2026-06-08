@@ -12,6 +12,7 @@ extends CanvasLayer
 @onready var level_label: Label = $HUDContainer/LevelLabel
 
 var _current_sanity: float = 100.0
+var _scare_overlay: ColorRect = null
 
 func _ready() -> void:
 	GameManager.sanity_changed.connect(_on_sanity_changed)
@@ -27,6 +28,7 @@ func _ready() -> void:
 	add_to_group("game_hud")
 
 	_create_notification_label()
+	_create_scare_overlay()
 
 	var sanity_section := get_node_or_null("HUDContainer/SanitySection")
 	if sanity_section:
@@ -42,7 +44,7 @@ func _ready() -> void:
 		prompt_label.visible = false
 
 	if is_instance_valid(level_label):
-		level_label.visible = OS.is_debug_build()
+		level_label.visible = false
 
 	print("[HUD] Ready.")
 
@@ -64,7 +66,8 @@ func _on_item_acquired(item_name: String) -> void:
 
 func _on_level_changed(level_num: int) -> void:
 	if is_instance_valid(level_label):
-		level_label.text = "Level: %d / %d" % [level_num, GameManager.MAX_LEVELS]
+		level_label.text = "LEVEL %d / %d" % [level_num, GameManager.MAX_LEVELS]
+		level_label.visible = level_num >= 1
 
 	if is_instance_valid(battery_container):
 		battery_container.visible = GameManager.has_item("flashlight")
@@ -172,6 +175,24 @@ func _start_label_shake() -> void:
 		_label_shake_active = false
 	)
 
+func _create_scare_overlay() -> void:
+	_scare_overlay = ColorRect.new()
+	_scare_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_scare_overlay.color = Color(0.5, 0.0, 0.0, 0.0)
+	_scare_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_scare_overlay.name = "ScareOverlay"
+	add_child(_scare_overlay)
+
+func flash_scare() -> void:
+	if not is_instance_valid(_scare_overlay):
+		return
+	_scare_overlay.color = Color(0.5, 0.0, 0.0, 0.0)
+	var tween := create_tween()
+	tween.tween_property(_scare_overlay, "color:a", 0.7, 0.05)
+	tween.tween_property(_scare_overlay, "color", Color(0.05, 0.0, 0.0, 0.25), 0.1)
+	tween.tween_property(_scare_overlay, "color", Color(0.55, 0.0, 0.0, 0.6), 0.08)
+	tween.tween_property(_scare_overlay, "color:a", 0.0, 0.4)
+
 var _notif_label: Label = null
 
 func _create_notification_label() -> void:
@@ -179,13 +200,27 @@ func _create_notification_label() -> void:
 	_notif_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_notif_label.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
 	_notif_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	_notif_label.position = Vector2(-300, -60)
-	_notif_label.size     = Vector2(600, 120)
-	_notif_label.add_theme_font_size_override("font_size", 22)
+	_notif_label.position = Vector2(-320, -160)
+	_notif_label.size     = Vector2(640, 90)
+	_notif_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_notif_label.add_theme_font_size_override("font_size", 30)
 	_notif_label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 	_notif_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 1))
-	_notif_label.add_theme_constant_override("shadow_offset_x", 2)
-	_notif_label.add_theme_constant_override("shadow_offset_y", 2)
+	_notif_label.add_theme_constant_override("shadow_offset_x", 3)
+	_notif_label.add_theme_constant_override("shadow_offset_y", 3)
+
+	var notif_bg := StyleBoxFlat.new()
+	notif_bg.bg_color = Color(0.05, 0.05, 0.06, 0.6)
+	notif_bg.corner_radius_top_left = 10
+	notif_bg.corner_radius_top_right = 10
+	notif_bg.corner_radius_bottom_right = 10
+	notif_bg.corner_radius_bottom_left = 10
+	notif_bg.content_margin_left = 28.0
+	notif_bg.content_margin_right = 28.0
+	notif_bg.content_margin_top = 14.0
+	notif_bg.content_margin_bottom = 14.0
+	_notif_label.add_theme_stylebox_override("normal", notif_bg)
+
 	_notif_label.modulate.a = 0.0
 	_notif_label.name = "NotifLabel"
 	add_child(_notif_label)
@@ -195,7 +230,7 @@ func _on_notification(message: String, is_bad: bool) -> void:
 		return
 	_notif_label.text = message
 	_notif_label.add_theme_color_override("font_color",
-		Color(1.0, 0.3, 0.3) if is_bad else Color(0.8, 1.0, 0.6))
+		Color(1.0, 0.4, 0.35) if is_bad else Color(0.85, 1.0, 0.7))
 	var tween := create_tween()
 	tween.tween_property(_notif_label, "modulate:a", 1.0, 0.3)
 	tween.tween_interval(2.0)

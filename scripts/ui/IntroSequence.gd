@@ -11,6 +11,7 @@ var _blink_rect: ColorRect
 var _meadow_env: Node3D
 var _forest_env: Node3D
 var _hollow: Node3D
+var _horde: Node3D
 var _skip_requested: bool = false
 var _world_env: WorldEnvironment
 var _env_meadow: Environment
@@ -48,6 +49,7 @@ func _ready() -> void:
 	_build_meadow_env()
 	_build_forest_env()
 	_build_hollow()
+	_build_horde()
 
 	_run.call_deferred()
 
@@ -94,9 +96,61 @@ func _run() -> void:
 	if _skip_requested: _finish_immediately(); return
 
 	_hollow.visible = true
-	await _wait(1.1)
+	_play_scare_sound(-2.0)
+	_shake_camera(2.5, 0.35)
+	await _wait(1.3)
+	if _skip_requested: _finish_immediately(); return
 
-	_cam.rotation_degrees.y = 0.0
+	# --- Backing away from the creature, too afraid to look away from it ---
+	var retreat := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	retreat.tween_property(_cam, "position:z", _cam.position.z - 3.0, 2.6)
+	var sway := create_tween().set_loops(7)
+	sway.tween_property(_cam, "rotation_degrees:x", -6.0, 0.18)
+	sway.tween_property(_cam, "rotation_degrees:x", -2.0, 0.18)
+	await retreat.finished
+	sway.kill()
+	_cam.rotation_degrees.x = -4.0
+	if _skip_requested: _finish_immediately(); return
+
+	# --- Backs straight into something solid — a jolt of pure fear ---
+	_shake_camera(8.0, 0.4)
+	await _wait(0.7)
+	if _skip_requested: _finish_immediately(); return
+
+	# --- Slowly, cautiously turns to look behind — afraid of what it'll see ---
+	await _wait(0.5)
+	var look_back_a := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	look_back_a.tween_property(_cam, "rotation_degrees:y", 100.0, 1.2)
+	await look_back_a.finished
+	if _skip_requested: _finish_immediately(); return
+	await _wait(0.6)
+	var look_back_b := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	look_back_b.tween_property(_cam, "rotation_degrees:y", 0.0, 1.4)
+	await look_back_b.finished
+	if _skip_requested: _finish_immediately(); return
+
+	# --- They were never alone — a horde closes in from every side ---
+	_horde.visible = true
+	_play_scare_sound(-1.0)
+	_shake_camera(5.0, 0.45)
+	await _wait(0.6)
+	if _skip_requested: _finish_immediately(); return
+
+	# --- Frantic scan left, then right — taking in just how many there are ---
+	var scan_l := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	scan_l.tween_property(_cam, "rotation_degrees:y", -30.0, 0.85)
+	await scan_l.finished
+	if _skip_requested: _finish_immediately(); return
+	await _wait(0.2)
+	var scan_r := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	scan_r.tween_property(_cam, "rotation_degrees:y", 30.0, 1.3)
+	await scan_r.finished
+	if _skip_requested: _finish_immediately(); return
+	await _wait(0.2)
+	var scan_c := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	scan_c.tween_property(_cam, "rotation_degrees:y", 0.0, 0.6)
+	await scan_c.finished
+	if _skip_requested: _finish_immediately(); return
 
 	var run_tween := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	run_tween.tween_property(_cam, "position:z", _cam.position.z - 18.0, 2.4)
@@ -385,18 +439,7 @@ func _build_hollow() -> void:
 		zombie.scale = Vector3(1.3, 1.3, 1.3)
 		zombie.rotation_degrees.y = 180.0
 		_hollow.add_child(zombie)
-		var to_check = [zombie]
-		var anim_player = null
-		while to_check.size() > 0:
-			var node = to_check.pop_back()
-			if node is AnimationPlayer:
-				anim_player = node
-				break
-			to_check.append_array(node.get_children())
-		if anim_player:
-			if anim_player.has_animation("IDLE"):
-				anim_player.get_animation("IDLE").loop_mode = Animation.LOOP_LINEAR
-				anim_player.play("IDLE")
+		_play_first_animation(zombie)
 
 	var glow := OmniLight3D.new()
 	glow.light_color  = Color(1.0, 0.0, 0.0)
@@ -405,3 +448,55 @@ func _build_hollow() -> void:
 	glow.shadow_enabled = false
 	glow.position = Vector3(0, 1.9, -0.2)
 	_hollow.add_child(glow)
+
+func _build_horde() -> void:
+	_horde = Node3D.new()
+	_horde.name = "ZombieHorde"
+	_horde.visible = false
+	_forest_env.add_child(_horde)
+
+	var hollow_pk    = load("res://assets/zombie_GLTF/scene.gltf")
+	var zombie_pk    := load("res://assets/monster/zombie.glb") as PackedScene
+	var crawler_pk   := load("res://assets/monster/animated_injured_zombie_crawling_loop.glb") as PackedScene
+
+	# [packed scene, position, rotation_y, uniform scale]
+	var spawns: Array = [
+		[hollow_pk,  Vector3(-2.6, 0,  -5.0),   40.0, 1.3],
+		[zombie_pk,  Vector3( 2.2, 0,  -6.5),  -30.0, 1.8],
+		[crawler_pk, Vector3(-0.6, 0,  -9.0),   70.0, 0.5],
+		[hollow_pk,  Vector3( 2.8, 0, -11.0), -150.0, 1.3],
+		[zombie_pk,  Vector3(-2.8, 0, -13.5),  110.0, 1.8],
+	]
+
+	for spawn in spawns:
+		var pk = spawn[0]
+		if not pk:
+			continue
+		var inst = pk.instantiate()
+		_horde.add_child(inst)
+		inst.position = spawn[1]
+		inst.rotation_degrees.y = spawn[2]
+		inst.scale = Vector3.ONE * float(spawn[3])
+		_play_first_animation(inst)
+
+func _play_first_animation(node: Node) -> void:
+	var to_check = [node]
+	while to_check.size() > 0:
+		var n = to_check.pop_back()
+		if n is AnimationPlayer:
+			var anims: PackedStringArray = n.get_animation_list()
+			if anims.size() > 0:
+				n.get_animation(anims[0]).loop_mode = Animation.LOOP_LINEAR
+				n.play(anims[0])
+			return
+		to_check.append_array(n.get_children())
+
+func _play_scare_sound(volume_db: float) -> void:
+	var p := AudioStreamPlayer.new()
+	add_child(p)
+	var stream = load("res://assets/audioo/zombie.mp3")
+	if stream:
+		p.stream = stream
+		p.volume_db = volume_db
+		p.play()
+	get_tree().create_timer(3.0).timeout.connect(p.queue_free)

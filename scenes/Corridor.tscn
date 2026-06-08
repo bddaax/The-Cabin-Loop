@@ -55,6 +55,9 @@ size = Vector3(0.2, 3.5, 24.0)
 [sub_resource type="BoxShape3D" id="BoxShape3D_WallRight"]
 size = Vector3(0.2, 3.5, 24.0)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_DoorCap"]
+size = Vector3(1.1, 3.5, 0.2)
+
 ; ─── Door detection shapes ───────────────────────────────────────────────────
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ExitTrigger"]
@@ -151,6 +154,36 @@ surface_material_override/0 = SubResource("Mat_Wall")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CorridorMesh/WallRight"]
 shape = SubResource("BoxShape3D_WallRight")
+
+; ─── Door End-Caps (solid walls flanking each door, prevents falling through gaps) ───
+
+[node name="DoorCap_ExitLeft" type="StaticBody3D" parent="CorridorMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.45, 1.75, -12)
+collision_layer = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CorridorMesh/DoorCap_ExitLeft"]
+shape = SubResource("BoxShape3D_DoorCap")
+
+[node name="DoorCap_ExitRight" type="StaticBody3D" parent="CorridorMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.45, 1.75, -12)
+collision_layer = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CorridorMesh/DoorCap_ExitRight"]
+shape = SubResource("BoxShape3D_DoorCap")
+
+[node name="DoorCap_EntranceLeft" type="StaticBody3D" parent="CorridorMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.45, 1.75, 12)
+collision_layer = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CorridorMesh/DoorCap_EntranceLeft"]
+shape = SubResource("BoxShape3D_DoorCap")
+
+[node name="DoorCap_EntranceRight" type="StaticBody3D" parent="CorridorMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.45, 1.75, 12)
+collision_layer = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CorridorMesh/DoorCap_EntranceRight"]
+shape = SubResource("BoxShape3D_DoorCap")
 
 ; ─── Light System ─────────────────────────────────────────────────────────────
 

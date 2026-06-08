@@ -18,7 +18,10 @@ const LEVEL_ANOMALY_DATA: Dictionary = {
 	5: { "type": "NONE",           "hint": "Ada daging aneh di dekat pintu keluar!" },
 	6: { "type": "NONE",           "hint": "Lampu meredup hampir gelap..." },
 	7: { "type": "NONE",           "hint": "Zombi di kegelapan!" },
-	8: { "type": "NONE",           "hint": "Ilusi pintu terbuka ke hutan" },
+	8: { "type": "NONE",           "hint": "Sesuatu merangkak keluar dari bawah lantai!" },
+	9: { "type": "NONE",           "hint": "" },
+	10: { "type": "NONE",          "hint": "Ada sosok menempel di dinding dekat pintu masuk!" },
+	11: { "type": "NONE",          "hint": "Ilusi pintu terbuka ke hutan" },
 }
 
 const LEVEL_TARGET_HINT: Dictionary = {
@@ -50,8 +53,12 @@ func setup(level: int, has_anomaly: bool) -> void:
 	print("[AnomalyManager] Found %d potential anomaly objects." % _all_anomaly_nodes.size())
 
 	if _has_anomaly:
-		if level == 5:
-			print("[AnomalyManager] Level 5 — anomaly handled by Corridor.gd (shrinking door).")
+		var anomaly_type_name: String = ""
+		if LEVEL_ANOMALY_DATA.has(level):
+			anomaly_type_name = LEVEL_ANOMALY_DATA[level]["type"]
+
+		if anomaly_type_name == "NONE":
+			print("[AnomalyManager] Level %d — anomaly handled directly by Corridor.gd (skipping generic anomaly)." % level)
 		else:
 			_activate_one_anomaly(level)
 	else:

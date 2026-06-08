@@ -3,6 +3,7 @@ extends Node3D
 var _blink_rect: ColorRect
 var _scream_player: AudioStreamPlayer
 var _cam: Camera3D
+var _finish_canvas: CanvasLayer
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -89,15 +90,20 @@ func _setup_jumpscare_assets() -> void:
 	add_child(cl)
 
 func _build_finish_overlay() -> void:
-	var canvas := CanvasLayer.new()
-	canvas.layer = 20
-	add_child(canvas)
+	_finish_canvas = CanvasLayer.new()
+	_finish_canvas.layer = 20
+	add_child(_finish_canvas)
 
 	var vbox := VBoxContainer.new()
-	vbox.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	vbox.anchor_left = 0.5
+	vbox.anchor_top = 0.5
+	vbox.anchor_right = 0.5
+	vbox.anchor_bottom = 0.5
+	vbox.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	vbox.grow_vertical = Control.GROW_DIRECTION_BOTH
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 20)
-	canvas.add_child(vbox)
+	vbox.add_theme_constant_override("separation", 28)
+	_finish_canvas.add_child(vbox)
 
 	var label := Label.new()
 	label.text = "FINISH?"
@@ -107,53 +113,71 @@ func _build_finish_overlay() -> void:
 	label.add_theme_constant_override("shadow_offset_x", 3)
 	label.add_theme_constant_override("shadow_offset_y", 3)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vbox.add_child(label)
 
 	var hbox := HBoxContainer.new()
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_theme_constant_override("separation", 40)
-	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_top", 40)
-	margin.add_child(hbox)
-	vbox.add_child(margin)
+	hbox.add_theme_constant_override("separation", 24)
+	hbox.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	vbox.add_child(hbox)
 
-	var btn_home := Button.new()
-	btn_home.text = "Return to Home"
-	btn_home.add_theme_font_size_override("font_size", 24)
-	btn_home.custom_minimum_size = Vector2(250, 50)
-	btn_home.pressed.connect(func():
-		GameManager.current_level = 0
-		GameManager.correct_streak = 0
-		get_tree().change_scene_to_file("res://scenes/UI/TitleScreen.tscn")
-	)
-	hbox.add_child(btn_home)
+	var btn_menu := Button.new()
+	btn_menu.text = "Main Menu"
+	btn_menu.add_theme_font_size_override("font_size", 24)
+	btn_menu.custom_minimum_size = Vector2(220, 52)
+	btn_menu.pressed.connect(_on_main_menu_pressed)
+	hbox.add_child(btn_menu)
 
-	var btn_present := Button.new()
-	btn_present.text = "Present?"
-	btn_present.add_theme_font_size_override("font_size", 24)
-	btn_present.custom_minimum_size = Vector2(200, 50)
-	btn_present.pressed.connect(_on_present_pressed)
-	hbox.add_child(btn_present)
+	var btn_exit := Button.new()
+	btn_exit.text = "Exit"
+	btn_exit.add_theme_font_size_override("font_size", 24)
+	btn_exit.custom_minimum_size = Vector2(160, 52)
+	btn_exit.pressed.connect(func(): get_tree().quit())
+	hbox.add_child(btn_exit)
 
-func _on_present_pressed() -> void:
+func _on_main_menu_pressed() -> void:
+	if is_instance_valid(_finish_canvas):
+		_finish_canvas.visible = false
+
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+	# Snap to black first — the jumpscare reveal happens out of the darkness.
+	var t_out := create_tween()
+	t_out.tween_property(_blink_rect, "color", Color(0, 0, 0, 1.0), 0.25)
+	await t_out.finished
+
+	var hollow: Node3D = null
 	var h_pk = load("res://scenes/TheHollow.tscn") as PackedScene
 	if h_pk:
-		var hollow = h_pk.instantiate() as Node3D
-		hollow.position = _cam.global_position + (-_cam.global_transform.basis.z * 1.5)
-		hollow.position.y -= 1.0
+		hollow = h_pk.instantiate() as Node3D
+		hollow.position = _cam.global_position + (-_cam.global_transform.basis.z * 1.3)
+		hollow.position.y -= 0.4
 		add_child(hollow)
 		hollow.look_at(_cam.global_position, Vector3.UP)
+		hollow.rotation.x = deg_to_rad(-16.0)
+		hollow.rotation.z = 0.0
+		hollow.visible = true
+
 	if _scream_player and _scream_player.stream:
 		_scream_player.play()
-	var t = create_tween()
+
+	var t_reveal := create_tween()
+	t_reveal.tween_property(_blink_rect, "color:a", 0.0, 0.05)
+
 	var orig_rot = _cam.rotation_degrees
-	for i in 20:
-		t.tween_property(_cam, "rotation_degrees", orig_rot + Vector3(randf_range(-10,10), randf_range(-10,10), randf_range(-10,10)), 0.05)
-	t.tween_property(_cam, "rotation_degrees", orig_rot, 0.05)
-	await get_tree().create_timer(1.0).timeout
-	var tb = create_tween()
-	tb.tween_property(_blink_rect, "color:a", 1.0, 0.2)
-	await tb.finished
-	await get_tree().create_timer(2.0).timeout
-	get_tree().quit()
+	var t_shake := create_tween()
+	for i in 14:
+		t_shake.tween_property(_cam, "rotation_degrees", orig_rot + Vector3(randf_range(-6, 6), randf_range(-6, 6), randf_range(-6, 6)), 0.05)
+	t_shake.tween_property(_cam, "rotation_degrees", orig_rot, 0.05)
+
+	await get_tree().create_timer(1.6).timeout
+
+	var t_final := create_tween()
+	t_final.tween_property(_blink_rect, "color:a", 1.0, 0.35)
+	await t_final.finished
+	await get_tree().create_timer(0.4).timeout
+
+	GameManager.current_level = 0
+	GameManager.correct_streak = 0
+	get_tree().change_scene_to_file("res://scenes/UI/TitleScreen.tscn")

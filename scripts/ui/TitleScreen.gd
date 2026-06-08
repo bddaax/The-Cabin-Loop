@@ -137,13 +137,13 @@ func _build_hollow_near_door() -> void:
 	hollow.position = Vector3(2.4, 0, 0.6)
 	add_child(hollow)
 
-	var zombie_scene = load("res://assets/zombie_GLTF/scene.gltf")
-	if zombie_scene:
-		var zombie = zombie_scene.instantiate()
-		zombie.scale = Vector3(1.3, 1.3, 1.3)
-		zombie.rotation_degrees.y = 180.0
-		hollow.add_child(zombie)
-		var to_check = [zombie]
+	var heart_scene = load("res://assets/monster/heart_monster.glb")
+	if heart_scene:
+		var heart = heart_scene.instantiate()
+		heart.scale = Vector3.ONE * 2.4
+		heart.rotation_degrees.y = 180.0
+		hollow.add_child(heart)
+		var to_check = [heart]
 		var anim_player = null
 		while to_check.size() > 0:
 			var node = to_check.pop_back()
@@ -152,9 +152,10 @@ func _build_hollow_near_door() -> void:
 				break
 			to_check.append_array(node.get_children())
 		if anim_player:
-			if anim_player.has_animation("IDLE"):
-				anim_player.get_animation("IDLE").loop_mode = Animation.LOOP_LINEAR
-				anim_player.play("IDLE")
+			var anims: PackedStringArray = anim_player.get_animation_list()
+			if anims.size() > 0:
+				anim_player.get_animation(anims[0]).loop_mode = Animation.LOOP_LINEAR
+				anim_player.play(anims[0])
 
 	var glow := OmniLight3D.new()
 	glow.light_color  = Color(1.0, 0.0, 0.0)

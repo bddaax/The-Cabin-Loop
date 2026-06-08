@@ -161,7 +161,9 @@ func _check_for_interaction() -> void:
 	interact_ray.force_raycast_update()
 
 	if not interact_ray.is_colliding():
-		_last_hovered = null
+		if _last_hovered != null:
+			_last_hovered = null
+			_hide_interact_prompt()
 		return
 
 	var collider := interact_ray.get_collider()
@@ -171,10 +173,10 @@ func _check_for_interaction() -> void:
 	if collider != _last_hovered:
 		_last_hovered = collider
 		var label: String = collider.get_meta("interactable_label", "")
-		if label != "" and is_instance_valid(get_tree()):
-			for hud in get_tree().get_nodes_in_group("game_hud"):
-				if hud.has_method("show_prompt"):
-					hud.show_prompt("[E] " + label)
+		if label != "":
+			_show_interact_prompt("[E] " + label)
+		else:
+			_hide_interact_prompt()
 
 	if Input.is_action_just_pressed("interact"):
 		if collider.has_method("interact"):
@@ -193,9 +195,26 @@ func _sync_flashlight_visibility() -> void:
 		return
 	flashlight_node.visible = GameManager.flashlight_active and GameManager.has_item("flashlight")
 
+func _show_interact_prompt(text: String) -> void:
+	if not is_instance_valid(get_tree()):
+		return
+	for hud in get_tree().get_nodes_in_group("game_hud"):
+		if hud.has_method("show_prompt"):
+			hud.show_prompt(text)
+
+func _hide_interact_prompt() -> void:
+	if not is_instance_valid(get_tree()):
+		return
+	for hud in get_tree().get_nodes_in_group("game_hud"):
+		if hud.has_method("hide_prompt"):
+			hud.hide_prompt()
+
 func _on_item_acquired(item_name: String) -> void:
 	if item_name == "flashlight":
 		_sync_flashlight_visibility()
+
+	_last_hovered = null
+	_hide_interact_prompt()
 
 func _on_game_state_changed(new_state: GameManager.GameState) -> void:
 	match new_state:

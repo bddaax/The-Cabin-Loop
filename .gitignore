@@ -15,9 +15,6 @@ data_*/
 mono_crash.*.json
 .qodo
 
-# Ignore large 3D models in assets root to prevent pushing to GitHub
-assets/*.glb
-
 # macOS system files
 .DS_Store
 
